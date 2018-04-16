@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "/home/local/TAG/janarthananr/TAG Projects/Example_Projects/Test/commonfeaturelib/build/intermediates/incremental/mergeDebugAndroidTestResources/merged.dir/values/values.xml",
+            "map": [
+                {
+                    "source": "/home/local/TAG/janarthananr/TAG Projects/Example_Projects/Test/commonfeaturelib/build/intermediates/bundles/debug/res/values/values.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,109",
+                        "endLines": "2,11",
+                        "endColumns": "53,12",
+                        "endOffsets": "104,602"
+                    }
+                }
+            ]
+        }
+    ]
+}

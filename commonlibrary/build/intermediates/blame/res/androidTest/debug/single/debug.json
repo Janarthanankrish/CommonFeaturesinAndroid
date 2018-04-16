@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "/home/local/TAG/janarthananr/TAG Projects/Example_Projects/Test/commonfeaturelib/build/intermediates/res/merged/androidTest/debug/layout_progressbar.xml.flat",
+        "source": "/home/local/TAG/janarthananr/TAG Projects/Example_Projects/Test/commonfeaturelib/build/intermediates/bundles/debug/res/layout/progressbar.xml"
+    },
+    {
+        "merged": "/home/local/TAG/janarthananr/TAG Projects/Example_Projects/Test/commonfeaturelib/build/intermediates/res/merged/androidTest/debug/drawable_progress.xml.flat",
+        "source": "/home/local/TAG/janarthananr/TAG Projects/Example_Projects/Test/commonfeaturelib/build/intermediates/bundles/debug/res/drawable/progress.xml"
+    }
+]
