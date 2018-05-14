@@ -12,6 +12,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import okhttp3.FormBody;
@@ -28,20 +29,30 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
     Context mContext;
     GetValuesFromApi getValuesFromApi;
     String apitype = "", outputfromapi = "", apiname = "", ApiUrl = "", ApiParametersRequest = "",
-            ApiHeadersRequest = "", ApiMultipartRequest = "", filepath = "", ApiUploadfiles = "", uploadnodename = "";
+            ApiHeadersRequest = "", filepath = "", uploadnodename = "";
     MediaType mediatype;
     boolean flagloading = false;
     ProgressDialog dialog;
+    ArrayList<UploadFilepojo> ApiUploadfiles = new ArrayList<>();
 
+    //TODO Call this when You Don't have File Upload
     public BackGroundTask(Context context, boolean flagloading, GetValuesFromApi getValuesFromApi,
-                          String type, String apiname, String ApiUploadfiles,
-                          String ApiMultipartRequest) {
+                          String type, String apiname) {
         this.mContext = context; // Activity Context
         this.flagloading = flagloading; // Loading dialogue
         this.getValuesFromApi = getValuesFromApi; // Output InterFace
         this.apitype = type; // Api type like (Get or Post)
         this.apiname = apiname; // Where we called
-        this.ApiMultipartRequest = ApiMultipartRequest; // its required only for files upload
+    }
+
+    //TODO Call this when You have File Upload
+    public BackGroundTask(Context context, boolean flagloading, GetValuesFromApi getValuesFromApi,
+                          String type, String apiname, ArrayList<UploadFilepojo> ApiUploadfiles) {
+        this.mContext = context; // Activity Context
+        this.flagloading = flagloading; // Loading dialogue
+        this.getValuesFromApi = getValuesFromApi; // Output InterFace
+        this.apitype = type; // Api type like (Get or Post)
+        this.apiname = apiname; // Where we called
         this.ApiUploadfiles = ApiUploadfiles; // No.of files list to upload
     }
 
@@ -69,7 +80,7 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
         try {
             if (ApiHeadersRequest != null && !ApiHeadersRequest.equals("")) {
                 headerbuilder = new Headers.Builder();
-                JSONObject headerjson = new JSONObject(ApiParametersRequest);
+                JSONObject headerjson = new JSONObject(ApiHeadersRequest);
                 Iterator<String> IterforHeader = headerjson.keys();
                 while (IterforHeader.hasNext()) {
                     String key = IterforHeader.next();
@@ -77,39 +88,39 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
                     headerbuilder.add(key, paraStr);
                 }
             }
-            if (ApiParametersRequest != null && !ApiParametersRequest.equals("")) {
-                postparamsbuilder = new FormBody.Builder();
-                JSONObject jsonParm = new JSONObject(ApiParametersRequest);
-                Iterator<String> IterforApiparameters = jsonParm.keys();
-                while (IterforApiparameters.hasNext()) {
-                    String key = IterforApiparameters.next();
-                    String paraStr = jsonParm.getString(key);
-                    postparamsbuilder.add(key, paraStr);
-                }
-            }
-            if (ApiUploadfiles != null && !ApiUploadfiles.equals("")) {
+//            TODO File Upload Implementations
+            if (ApiUploadfiles != null && ApiUploadfiles.size() > 0) {
                 multibuilder = new MultipartBody.Builder()
                         .setType(MultipartBody.FORM);
-                JSONObject jsonObject = new JSONObject(ApiUploadfiles);
-                JSONArray jsonArray = jsonObject.getJSONArray("uploadfiles");
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    JSONObject jslist = jsonArray.getJSONObject(i);
-                    mediatype = MediaType.parse(jslist.getString("mediatype"));
-                    filepath = jslist.getString("filepath");
-                    uploadnodename = jslist.getString("uploadnodename");
+                for (int i = 0; i < ApiUploadfiles.size(); i++) {
+                    mediatype = MediaType.parse(ApiUploadfiles.get(i).mediatype);
+                    filepath = ApiUploadfiles.get(i).filepath;
+                    uploadnodename = ApiUploadfiles.get(i).uploadnodename;
                     multibuilder.addFormDataPart(uploadnodename, new File(filepath).getName(),
                             RequestBody.create(mediatype, new File(filepath)));
                 }
-            }
-            if (ApiMultipartRequest != null && !ApiMultipartRequest.equals("")) {
-                JSONObject jsonMultipart = new JSONObject(ApiMultipartRequest);
-                Iterator<String> IterforApiparameters = jsonMultipart.keys();
-                while (IterforApiparameters.hasNext()) {
-                    String key = IterforApiparameters.next();
-                    String paraStr = jsonMultipart.getString(key);
-                    multibuilder.addFormDataPart(key, paraStr);
+                if (ApiParametersRequest != null && !ApiParametersRequest.equals("")) {
+                    JSONObject jsonMultipart = new JSONObject(ApiParametersRequest);
+                    Iterator<String> IterforApiparameters = jsonMultipart.keys();
+                    while (IterforApiparameters.hasNext()) {
+                        String key = IterforApiparameters.next();
+                        String paraStr = jsonMultipart.getString(key);
+                        multibuilder.addFormDataPart(key, paraStr);
+                    }
+                }
+            } else {
+                if (ApiParametersRequest != null && !ApiParametersRequest.equals("")) {
+                    postparamsbuilder = new FormBody.Builder();
+                    JSONObject jsonParm = new JSONObject(ApiParametersRequest);
+                    Iterator<String> IterforApiparameters = jsonParm.keys();
+                    while (IterforApiparameters.hasNext()) {
+                        String key = IterforApiparameters.next();
+                        String paraStr = jsonParm.getString(key);
+                        postparamsbuilder.add(key, paraStr);
+                    }
                 }
             }
+
             if (apitype.equalsIgnoreCase("POST")) {
                 if (headerbuilder != null) {
                     request = new okhttp3.Request.Builder()
@@ -151,7 +162,23 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
                         .url(ApiUrl)
                         .build();
             } else if (apitype.equalsIgnoreCase("Put")) {
-
+                if (multibuilder != null && headerbuilder != null)
+                    request = new okhttp3.Request.Builder()
+                            .url(ApiUrl)
+                            .headers(headerbuilder.build())
+                            .put(multibuilder.build()).build();
+                else if (multibuilder != null)
+                    request = new okhttp3.Request.Builder()
+                            .url(ApiUrl)
+                            .put(multibuilder.build()).build();
+                else if (headerbuilder != null)
+                    request = new okhttp3.Request.Builder()
+                            .url(ApiUrl)
+                            .headers(headerbuilder.build())
+                            .put(postparamsbuilder.build()).build();
+                else request = new okhttp3.Request.Builder()
+                            .url(ApiUrl)
+                            .put(postparamsbuilder.build()).build();
             }
             outputfromapi = Chttpclient.get(request);
         } catch (IOException e) {
@@ -165,7 +192,7 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
     @Override
     protected void onPostExecute(String output) {
         super.onPostExecute(output);
-        if(flagloading&&dialog!=null&&dialog.isShowing()){
+        if (flagloading && dialog != null && dialog.isShowing()) {
             dialog.cancel();
         }
         this.getValuesFromApi.valuesfromServer(output, apiname);

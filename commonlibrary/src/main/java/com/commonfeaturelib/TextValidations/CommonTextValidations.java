@@ -5,9 +5,12 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Parcel;
 import android.provider.ContactsContract;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextPaint;
@@ -302,6 +305,53 @@ public class CommonTextValidations {
 
         }
         return contactList;
+    }
+
+    //    TODO get File Path
+    public String getPath(Context ctx, Uri uri) {
+        String filePath = "";
+        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+        if (isKitKat) {
+            filePath = generateFromKitkat(uri, ctx);
+        }
+
+        if (filePath != null) {
+            return filePath;
+        }
+        Cursor cursor = ctx.getContentResolver().query(uri, new String[]{MediaStore.MediaColumns.DATA}, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+                filePath = cursor.getString(columnIndex);
+            }
+            cursor.close();
+        }
+        return filePath == null ? uri.getPath() : filePath;
+    }
+
+    public String generateFromKitkat(Uri uri, Context context) {
+        String filePath = null;
+        if (DocumentsContract.isDocumentUri(context, uri)) {
+            String wholeID = DocumentsContract.getDocumentId(uri);
+
+            String id = wholeID.split(":")[1];
+
+            String[] column = {MediaStore.Video.Media.DATA};
+            String sel = MediaStore.Video.Media._ID + "=?";
+
+            Cursor cursor = context.getContentResolver().
+                    query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                            column, sel, new String[]{id}, null);
+
+            int columnIndex = cursor.getColumnIndex(column[0]);
+
+            if (cursor.moveToFirst()) {
+                filePath = cursor.getString(columnIndex);
+            }
+
+            cursor.close();
+        }
+        return filePath;
     }
 
     //    TODO Clickable Span
