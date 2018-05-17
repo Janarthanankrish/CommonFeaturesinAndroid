@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">CommonFeatureLib</string>
+    <string name="selection_limiter_pix">Cant select more than %d items.</string>
+</resources>
