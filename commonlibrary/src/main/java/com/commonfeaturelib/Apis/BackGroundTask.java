@@ -43,6 +43,7 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
         this.getValuesFromApi = getValuesFromApi; // Output InterFace
         this.apitype = type; // Api type like (Get or Post)
         this.apiname = apiname; // Where we called
+
     }
 
     //TODO Call this when You have File Upload
@@ -54,16 +55,18 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
         this.apitype = type; // Api type like (Get or Post)
         this.apiname = apiname; // Where we called
         this.ApiUploadfiles = ApiUploadfiles; // No.of files list to upload
+
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
         if (flagloading) {
-            dialog = new ProgressDialog(mContext, R.style.FullscreenDialog);
-            dialog.setContentView(R.layout.progressbar);
-            dialog.setCancelable(false);
-            dialog.show();
+//            dialog = new ProgressDialog(mContext);
+//            dialog.setContentView(R.layout.progressbar);
+//            dialog.setCancelable(true);
+//            dialog.setCanceledOnTouchOutside(true);
+//            dialog.show();
         }
     }
 
@@ -73,6 +76,9 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
         ApiUrl = strings[0];
         ApiParametersRequest = strings[1];
         ApiHeadersRequest = strings[2];
+        System.out.println("Api URL--"+ApiUrl);
+        System.out.println("ApiParametersRequest--"+ApiParametersRequest);
+        System.out.println("ApiHeadersRequest--"+ApiHeadersRequest);
         Headers.Builder headerbuilder = null;
         okhttp3.Request request = null;
         FormBody.Builder postparamsbuilder = null;
@@ -122,7 +128,16 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
             }
 
             if (apitype.equalsIgnoreCase("POST")) {
-                if (headerbuilder != null) {
+                if (headerbuilder != null && multibuilder != null) {
+                    request = new okhttp3.Request.Builder()
+                            .url(ApiUrl)
+                            .headers(headerbuilder.build())
+                            .post(multibuilder.build()).build();
+                } else if (multibuilder != null) {
+                    request = new okhttp3.Request.Builder()
+                            .url(ApiUrl)
+                            .post(multibuilder.build()).build();
+                } else if (headerbuilder != null) {
                     request = new okhttp3.Request.Builder()
                             .url(ApiUrl)
                             .headers(headerbuilder.build())
@@ -181,6 +196,7 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
                             .put(postparamsbuilder.build()).build();
             }
             outputfromapi = Chttpclient.get(request);
+            System.out.println("outputfromapi--"+outputfromapi);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (JSONException e) {

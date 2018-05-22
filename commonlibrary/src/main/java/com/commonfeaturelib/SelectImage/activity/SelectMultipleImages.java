@@ -1,10 +1,12 @@
 package com.commonfeaturelib.SelectImage.activity;
 
+import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -13,6 +15,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.res.ResourcesCompat;
@@ -33,6 +36,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.commonfeaturelib.Common.RuntimePermissionsActivity;
 import com.commonfeaturelib.R;
 import com.commonfeaturelib.SelectImage.PhotoSelectPojo;
 import com.commonfeaturelib.SelectImage.adapters.InstantImageAdapter;
@@ -61,7 +65,7 @@ import java.util.Set;
  * Created by janarthananr on 16/5/18.
  */
 
-public class SelectMultipleImages extends AppCompatActivity implements View.OnTouchListener {
+public class SelectMultipleImages extends RuntimePermissionsActivity implements View.OnTouchListener {
 
     private static final int sBubbleAnimDuration = 1000;
     private static final int sScrollbarHideDelay = 1000;
@@ -235,49 +239,13 @@ public class SelectMultipleImages extends AppCompatActivity implements View.OnTo
     private FrameLayout flash;
     private ImageView front;
 
-    public static void start(final Fragment context, final int requestCode, final int selectionCount) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PermUtil.checkForCamara_WritePermissions(context, new WorkFinish() {
-                @Override
-                public void onWorkFinish(Boolean check) {
-                    Intent i = new Intent(context.getActivity(), SelectMultipleImages.class);
-                    i.putExtra(SELECTION, selectionCount);
-                    context.startActivityForResult(i, requestCode);
-                }
-            });
-        } else {
-            Intent i = new Intent(context.getActivity(), SelectMultipleImages.class);
-            i.putExtra(SELECTION, selectionCount);
-            context.startActivityForResult(i, requestCode);
-        }
-
-    }
-
-    public static void start(Fragment context, int requestCode) {
-        start(context, requestCode, 1);
-    }
-
-    public static void start(final FragmentActivity context, final int requestCode, final int selectionCount) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PermUtil.checkForCamara_WritePermissions(context, new WorkFinish() {
-                @Override
-                public void onWorkFinish(Boolean check) {
-                    Intent i = new Intent(context, SelectMultipleImages.class);
-                    i.putExtra(SELECTION, selectionCount);
-                    context.startActivityForResult(i, requestCode);
-                }
-            });
-        } else {
-            Intent i = new Intent(context, SelectMultipleImages.class);
-            i.putExtra(SELECTION, selectionCount);
-            context.startActivityForResult(i, requestCode);
-        }
-    }
-
-    public static void start(Activity context, int requestCode) {
+    public static void start(Activity context, int requestCode, int selectionCount) {
         Intent i = new Intent(context, SelectMultipleImages.class);
+        i.putExtra(SELECTION, selectionCount);
         context.startActivityForResult(i, requestCode);
     }
+
+
 
     private void hideScrollbar() {
         float transX = getResources().getDimensionPixelSize(R.dimen.fastscroll_scrollbar_padding_end);
@@ -314,22 +282,33 @@ public class SelectMultipleImages extends AppCompatActivity implements View.OnTo
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Utility.SetupStatusBarHiden(this);
-        Utility.hideStatusBar(this);
-        setContentView(R.layout.activity_main_lib);
-        Fresco.initialize(this);
-        initialize();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            SelectMultipleImages.super.requestAppPermissions(new
+                            String[]{Manifest.permission.CAMERA,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.RECORD_AUDIO}, R.string
+                            .runtime_permissions_txt
+                    , 123);
+            return;
+        } else {
+            Utility.SetupStatusBarHiden(this);
+            Utility.hideStatusBar(this);
+            setContentView(R.layout.activity_main_lib);
+            Fresco.initialize(this);
+            initialize();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mCamera.start();
+        if (mCamera != null)
+            mCamera.start();
     }
 
     @Override
     protected void onPause() {
-        mCamera.stop();
+        if (mCamera != null) mCamera.stop();
         super.onPause();
     }
 
@@ -686,44 +665,6 @@ public class SelectMultipleImages extends AppCompatActivity implements View.OnTo
 
     @Override
     public void onBackPressed() {
-//        if (selectionList.size() > 0) {
-//            for (PhotoSelectPojo photoSelectPojo : selectionList) {
-//                mainImageAdapter.getItemList().get(photoSelectPojo.position).isSelected = false;
-//                mainImageAdapter.notifyItemChanged(photoSelectPojo.position);
-//                initaliseadapter.getItemList().get(photoSelectPojo.position).isSelected = false;
-//                initaliseadapter.notifyItemChanged(photoSelectPojo.position);
-//            }
-//            LongSelection = false;
-//            if (SelectionCount > 1) {
-//                selection_check.setVisibility(View.VISIBLE);
-//            }
-//            DrawableCompat.setTint(selection_back.getDrawable(), colorPrimaryDark);
-//            topbar.setBackgroundColor(Color.parseColor("#ffffff"));
-//            Animation anim = new ScaleAnimation(
-//                    1f, 0f, // Start and end values for the X axis scaling
-//                    1f, 0f, // Start and end values for the Y axis scaling
-//                    Animation.RELATIVE_TO_SELF, 0.5f, // Pivot point of X scaling
-//                    Animation.RELATIVE_TO_SELF, 0.5f); // Pivot point of Y scaling
-//            anim.setFillAfter(true); // Needed to keep the result of the animation
-//            anim.setDuration(300);
-//            anim.setAnimationListener(new Animation.AnimationListener() {
-//                @Override
-//                public void onAnimationStart(Animation animation) {
-//
-//                }
-//
-//                @Override
-//                public void onAnimationEnd(Animation animation) {
-//                    sendButton.setVisibility(View.GONE);
-//                    sendButton.clearAnimation();
-//                }
-//
-//                @Override
-//                public void onAnimationRepeat(Animation animation) {
-//
-//                }
-//            });
-//            sendButton.startAnimation(anim);
         selectionList.clear();
 //        } else
         if (mBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
@@ -733,5 +674,16 @@ public class SelectMultipleImages extends AppCompatActivity implements View.OnTo
         }
 
     }
+
+
+    @Override
+    public void onPermissionsGranted(int requestCode) {
+        Utility.SetupStatusBarHiden(this);
+        Utility.hideStatusBar(this);
+        setContentView(R.layout.activity_main_lib);
+        Fresco.initialize(this);
+        initialize();
+    }
+
 
 }
