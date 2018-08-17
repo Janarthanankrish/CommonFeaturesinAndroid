@@ -32,7 +32,7 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
             ApiHeadersRequest = "", filepath = "", uploadnodename = "";
     MediaType mediatype;
     boolean flagloading = false;
-    ProgressDialog dialog;
+    Dialog dialog;
     ArrayList<UploadFilepojo> ApiUploadfiles = new ArrayList<>();
 
     //TODO Call this when You Don't have File Upload
@@ -62,17 +62,18 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
     protected void onPreExecute() {
         super.onPreExecute();
         if (flagloading) {
-//            dialog = new ProgressDialog(mContext);
-//            dialog.setContentView(R.layout.progressbar);
-//            dialog.setCancelable(true);
-//            dialog.setCanceledOnTouchOutside(true);
-//            dialog.show();
+          dialog = new Dialog(mContext, R.style.FullscreenDialog);
+            dialog.setContentView(R.layout.progressbar);
+            dialog.setCancelable(false);
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.show();
         }
     }
 
     @Override
     protected String doInBackground(String... strings) {
         CustomApiClient Chttpclient = new CustomApiClient();
+	MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         ApiUrl = strings[0];
         ApiParametersRequest = strings[1];
         ApiHeadersRequest = strings[2];
@@ -81,7 +82,7 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
         System.out.println("ApiHeadersRequest--"+ApiHeadersRequest);
         Headers.Builder headerbuilder = null;
         okhttp3.Request request = null;
-        FormBody.Builder postparamsbuilder = null;
+        RequestBody postparamsbuilder = null;
         MultipartBody.Builder multibuilder = null;
         try {
             if (ApiHeadersRequest != null && !ApiHeadersRequest.equals("")) {
@@ -114,17 +115,9 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
                         multibuilder.addFormDataPart(key, paraStr);
                     }
                 }
-            } else {
-                if (ApiParametersRequest != null && !ApiParametersRequest.equals("")) {
-                    postparamsbuilder = new FormBody.Builder();
-                    JSONObject jsonParm = new JSONObject(ApiParametersRequest);
-                    Iterator<String> IterforApiparameters = jsonParm.keys();
-                    while (IterforApiparameters.hasNext()) {
-                        String key = IterforApiparameters.next();
-                        String paraStr = jsonParm.getString(key);
-                        postparamsbuilder.add(key, paraStr);
-                    }
-                }
+            } else if (ApiParametersRequest != null && !ApiParametersRequest.equals("")) {
+                   postparamsbuilder = RequestBody.create(JSON, ApiParametersRequest);
+
             }
 
             if (apitype.equalsIgnoreCase("POST")) {
@@ -141,11 +134,11 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
                     request = new okhttp3.Request.Builder()
                             .url(ApiUrl)
                             .headers(headerbuilder.build())
-                            .post(postparamsbuilder.build()).build();
+                            .post(postparamsbuilder).build();
                 } else {
                     request = new okhttp3.Request.Builder()
                             .url(ApiUrl)
-                            .post(postparamsbuilder.build()).build();
+                            .post(postparamsbuilder).build();
                 }
             } else if (apitype.equalsIgnoreCase("Multipart")) {
                 if (headerbuilder != null) {
@@ -190,10 +183,10 @@ public class BackGroundTask extends AsyncTask<String, String, String> {
                     request = new okhttp3.Request.Builder()
                             .url(ApiUrl)
                             .headers(headerbuilder.build())
-                            .put(postparamsbuilder.build()).build();
+                            .put(postparamsbuilder).build();
                 else request = new okhttp3.Request.Builder()
                             .url(ApiUrl)
-                            .put(postparamsbuilder.build()).build();
+                            .put(postparamsbuilder).build();
             }
             outputfromapi = Chttpclient.get(request);
             System.out.println("outputfromapi--"+outputfromapi);
